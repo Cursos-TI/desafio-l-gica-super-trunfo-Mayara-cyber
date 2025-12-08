@@ -1,0 +1,165 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Definição da estrutura (struct) para a Carta de País
+typedef struct {
+    char nome[50];
+    int populacao;          // 1
+    float area;             // 2
+    float pib;              // 3
+    int pontosTuristicos;   // 4
+    float densidadeDemografica; // 5
+} CartaPais;
+
+// Função auxiliar para obter o valor de um atributo específico
+float obterValorAtributo(CartaPais carta, int atributo) {
+    switch (atributo) {
+        case 1: return carta.populacao;
+        case 2: return carta.area;
+        case 3: return carta.pib;
+        case 4: return carta.pontosTuristicos;
+        case 5: return carta.densidadeDemografica;
+        default: return 0.0;
+    }
+}
+
+// Função auxiliar para obter o nome do atributo
+char* obterNomeAtributo(int atributo) {
+    switch (atributo) {
+        case 1: return "População";
+        case 2: return "Área";
+        case 3: return "PIB";
+        case 4: return "Pontos Turísticos";
+        case 5: return "Densidade Demográfica";
+        default: return "INVÁLIDO";
+    }
+}
+
+// Função para exibir o menu dinâmico e obter a escolha do jogador
+int exibirMenuDinamico(int atributo_excluido) {
+    int escolha;
+    
+    printf("\n--- Escolha o Atributo (Regra: Maior Vence, exceto Densidade) ---\n");
+    
+    // As opções são mostradas apenas se não forem o atributo_excluido
+    if (atributo_excluido != 1) printf("1. População\n");
+    if (atributo_excluido != 2) printf("2. Área\n");
+    if (atributo_excluido != 3) printf("3. PIB\n");
+    if (atributo_excluido != 4) printf("4. Pontos Turísticos\n");
+    if (atributo_excluido != 5) printf("5. Densidade Demográfica (Regra INVERSA: Menor Vence)\n");
+    
+    printf("6. Sair\n");
+    printf("--------------------------------------------------------------------\n");
+    printf("Digite sua escolha: ");
+    
+    if (scanf("%d", &escolha) != 1) {
+        // Limpa o buffer de entrada em caso de erro
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+        return 0; // Retorna 0 para indicar erro
+    }
+    
+    // Validação de escolha
+    if (escolha >= 1 && escolha <= 5 && escolha != atributo_excluido) {
+        return escolha;
+    } else if (escolha == 6) {
+        return 6;
+    } else {
+        return 0; // Opção inválida ou repetida
+    }
+}
+
+// Função principal de comparação de dois atributos e soma
+void compararAvancado(CartaPais carta1, CartaPais carta2) {
+    int atributo1 = 0, atributo2 = 0;
+    
+    // --- Escolha do Primeiro Atributo ---
+    printf("\n>>> Escolha do PRIMEIRO Atributo <<<\n");
+    do {
+        atributo1 = exibirMenuDinamico(0); // 0 = nenhum excluído
+        if (atributo1 == 6) return;
+        if (atributo1 == 0) printf("Opção inválida. Tente novamente.\n");
+    } while (atributo1 == 0);
+    
+    // --- Escolha do Segundo Atributo (Dinâmico) ---
+    printf("\n>>> Escolha do SEGUNDO Atributo <<<\n");
+    do {
+        atributo2 = exibirMenuDinamico(atributo1); // Exclui o primeiro atributo
+        if (atributo2 == 6) return;
+        if (atributo2 == 0) printf("Opção inválida ou atributo repetido. Tente novamente.\n");
+    } while (atributo2 == 0);
+    
+    // --- Lógica de Comparação e Cálculo da Soma ---
+    
+    float val1_attr1 = obterValorAtributo(carta1, atributo1);
+    float val2_attr1 = obterValorAtributo(carta2, atributo1);
+    float val1_attr2 = obterValorAtributo(carta1, atributo2);
+    float val2_attr2 = obterValorAtributo(carta2, atributo2);
+    
+    // Soma Total (para desempate final)
+    float soma1 = val1_attr1 + val1_attr2;
+    float soma2 = val2_attr1 + val2_attr2;
+    
+    // --- Exibição de Resultados ---
+    printf("\n*** Detalhes da Rodada ***\n");
+    printf("Atributo 1: %s\n", obterNomeAtributo(atributo1));
+    printf("Atributo 2: %s\n", obterNomeAtributo(atributo2));
+    printf("------------------------------------------\n");
+    
+    printf("| %-10s | %-10s | %-10s | %-10s |\n", "País", obterNomeAtributo(atributo1), obterNomeAtributo(atributo2), "Soma Total");
+    printf("------------------------------------------\n");
+    printf("| %-10s | %-10.2f | %-10.2f | %-10.2f |\n", carta1.nome, val1_attr1, val1_attr2, soma1);
+    printf("| %-10s | %-10.2f | %-10.2f | %-10.2f |\n", carta2.nome, val2_attr1, val2_attr2, soma2);
+    printf("------------------------------------------\n");
+    
+    // --- Comparação Final (Regra Principal: Maior Soma Vence) ---
+    
+    // Usando o Operador Ternário para determinar o resultado da Soma
+    char* resultado_final = (soma1 > soma2) ? carta1.nome :
+                            (soma2 > soma1) ? carta2.nome : 
+                            "Empate!"; // Decisão aninhada dentro do ternário
+
+    printf("\n>>> VENCEDOR DA RODADA (Pela SOMA dos atributos): %s <<<\n", resultado_final);
+    printf("**************************************************\n");
+}
+
+int main() {
+    // --- CARTAS PRÉ-CADASTRADAS ---
+    // Valores simplificados para teste
+    CartaPais cartaA = {
+        .nome = "Brasil",
+        .populacao = 214,        // 1
+        .area = 8515767.0,       // 2
+        .pib = 1.9,              // 3
+        .pontosTuristicos = 250, // 4
+        .densidadeDemografica = 25.13 // 5 (Menor vence)
+    };
+
+    CartaPais cartaB = {
+        .nome = "Alemanha",
+        .populacao = 83,         // 1
+        .area = 357588.0,        // 2
+        .pib = 4.3,              // 3
+        .pontosTuristicos = 180, // 4
+        .densidadeDemografica = 232.09 // 5 (Menor vence)
+    };
+    
+    printf("Bem-vindo ao Super Trunfo MESTRE!\n");
+    printf("Cartas em jogo: %s vs %s\n", cartaA.nome, cartaB.nome);
+    
+    // Loop principal para o Menu
+    while (1) {
+        // Chamamos a função principal de comparação que gerencia toda a lógica
+        compararAvancado(cartaA, cartaB);
+        
+        printf("\nPressione ENTER para iniciar uma nova comparação ou digite '6' e ENTER para sair.\n");
+        int c = getchar();
+        if (c == '6') break;
+        // Limpa o buffer para o próximo loop
+        while ((c = getchar()) != '\n' && c != EOF);
+    }
+
+    printf("\nPrograma encerrado.\n");
+    return 0;
+}
